@@ -1,5 +1,8 @@
 import requests
+import logging
 
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def fetch_weather_data(api_key, lat=39.9526, lon=-75.1652, exclude="hourly,minutely", units="metric", lang="en"):
     """Fetches detailed weather data using OpenWeatherMap One Call 3.0 API."""
@@ -13,28 +16,32 @@ def fetch_weather_data(api_key, lat=39.9526, lon=-75.1652, exclude="hourly,minut
         "lang": lang
     }
 
-    response = requests.get(url, params=params)
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()  # Raises HTTPError for bad responses (4xx and 5xx)
 
-    if response.status_code == 200:
         data = response.json()
+        logging.info("Weather data successfully retrieved.")
         return data
-    elif response.status_code == 401:
-        print("Error 401: Unauthorized. Please check your API key and ensure it has access to One Call 3.0.")
-        return None
-    else:
-        print("Failed to retrieve data:", response.status_code)
-        return None
+    except requests.exceptions.HTTPError as http_err:
+        if response.status_code == 401:
+            logging.error("Error 401: Unauthorized. Please check your API key.")
+        else:
+            logging.error(f"HTTP error occurred: {http_err}")
+    except Exception as err:
+        logging.error(f"An error occurred: {err}")
+    return None
 
 
 def generate_weather_report(data):
     """Generates a readable weather report from the One Call API data."""
     if data:
-        current = data["current"]
-        temperature = current["temp"]
-        feels_like = current["feels_like"]
-        humidity = current["humidity"]
-        wind_speed = current["wind_speed"]
-        weather = current["weather"][0]["description"]
+        current = data.get("current", {})
+        temperature = current.get("temp", "N/A")
+        feels_like = current.get("feels_like", "N/A")
+        humidity = current.get("humidity", "N/A")
+        wind_speed = current.get("wind_speed", "N/A")
+        weather = current.get("weather", [{}])[0].get("description", "N/A")
 
         report = (
             f"Weather Report:\n"
@@ -50,7 +57,7 @@ def generate_weather_report(data):
 
 
 # Main Program
-api_key = "599c43067d70a6efa0a8609e10215968"  # API key
+api_key = "599c43067d70a6efa0a8609e10215968"  
 
 # Fetch weather data
 weather_data = fetch_weather_data(api_key)
