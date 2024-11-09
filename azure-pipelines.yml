@@ -1,0 +1,39 @@
+# Starter pipeline 
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  PYTHON_VERSION: '3.10'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '$(PYTHON_VERSION)'
+
+- script: python -m pip install --upgrade pip
+  displayName: 'Upgrade pip'
+
+- script: pip install -r requirements.txt
+  displayName: 'Install Dependencies'
+
+- script: pytest tests/
+  displayName: 'Run Unit Tests'
+
+- script: |
+    python main.py
+  displayName: 'Run Weather Data Script'
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: $(Build.ArtifactStagingDirectory)
+    artifactName: 'weather-report'
+    publishLocation: 'pipeline'
