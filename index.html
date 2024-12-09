@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom right, #87cefa, #4682b4);
+            color: #fff;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            margin-top: 20px;
+            font-size: 2.5em;
+            color: #fff;
+        }
+        form {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.4);
+            display: inline-block;
+            border-radius: 10px;
+        }
+        label {
+            font-size: 1.2em;
+            display: block;
+            margin-bottom: 10px;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 1em;
+        }
+        button {
+            background-color: #4caf50;
+            color: white;
+            font-size: 1.2em;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        footer {
+            margin-top: 50px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        .error {
+            color: red;
+            margin-top: 20px;
+        }
+        .report {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000;
+            border-radius: 10px;
+            display: inline-block;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to WeatherApp</h1>
+    <form id="weather-form">
+        <label for="city">Enter City Name:</label>
+        <input type="text" id="city" name="city" placeholder="e.g., Philadelphia"><br><br>
+        <button type="submit">Get Weather</button>
+    </form>
+    <div id="feedback" class="error"></div>
+    <div id="weather-report" class="report" style="display: none;"></div>
+    <footer>
+        <p>Powered by OpenWeatherMap API</p>
+    </footer>
+
+    <script>
+        const form = document.getElementById('weather-form');
+        const feedback = document.getElementById('feedback');
+        const weatherReport = document.getElementById('weather-report');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const city = document.getElementById('city').value;
+
+            feedback.textContent = '';
+            weatherReport.style.display = 'none';
+
+            if (!city) {
+                feedback.textContent = 'Please enter a city name!';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/weather?city=${encodeURIComponent(city)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const report = `
+                        <h2>Weather Report for ${data.report.city}</h2>
+                        <p><strong>Weather:</strong> ${data.report.weather}</p>
+                        <p><strong>Temperature:</strong> ${data.report.temperature}°C</p>
+                        <p><strong>Feels Like:</strong> ${data.report.feels_like}°C</p>
+                        <p><strong>Humidity:</strong> ${data.report.humidity}%</p>
+                        <p><strong>Wind Speed:</strong> ${data.report.wind_speed} m/s</p>
+                    `;
+                    weatherReport.innerHTML = report;
+                    weatherReport.style.display = 'block';
+                } else {
+                    feedback.textContent = data.message || 'Error fetching weather data.';
+                }
+            } catch (error) {
+                feedback.textContent = 'An error occurred. Please try again later.';
+            }
+        });
+    </script>
+</body>
+</html>
